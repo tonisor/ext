@@ -46,10 +46,23 @@ struct EquationTerm
 //
 //};
 
+//template <typename T = void>
+//struct Op1Square
+//{
+//	template <typename T1>
+//	auto operator()(T1&& v1) const
+//	{
+//		return static_cast<T1&&>(v1) * static_cast<T1&&>(v1);
+//	}
+//};
+
 
 int main()
 {
 	auto a = ext::gcd();
+
+	ext::narrowest_type_t<float, char> aa;
+
 	constexpr auto x = ext::gcd((unsigned int)8, (unsigned int)0, (unsigned int)600, (unsigned int)200, (unsigned int)72);
 	return 0;
 }
