@@ -10,6 +10,7 @@
 #include <memory>
 #include "ext/type_traits.hpp"
 #include "ext/cmath.hpp"
+#include "ext/bigint.hpp"
 
 template <typename T>
 T RandomInRange(const T& minValue, const T& maxValue)
@@ -149,26 +150,51 @@ constexpr bool strequal_c(const char* left, const char* right)
 }
 
 template <std::size_t N, std::size_t I = N - 1>
-constexpr std::pair<std::size_t, bool> find(const std::array<const char*, N>& a, const char* str)
+constexpr auto find(const std::array<const char*, N>& a, const char* str) -> std::enable_if_t<(I >= N), std::pair<std::size_t, bool>>
+{
+	return find<N, N - 1>(a, str);
+}
+
+template <std::size_t N, std::size_t I = N - 1>
+constexpr auto find(const std::array<const char*, N>& a, const char* str) -> std::enable_if_t<(N > 0) && I == 0, std::pair<std::size_t, bool>>
+{
+	return std::make_pair(0, strequal_c(a[0], str));
+}
+
+template <std::size_t N, std::size_t I = N - 1>
+constexpr auto find(const std::array<const char*, N>& a, const char* str) -> std::enable_if_t<(I < N) && (I > 0), std::pair<std::size_t, bool>>
 {
 	return N < 1
 			? std::make_pair(std::size_t{}, false)
-			: I >= N
-				? find<N, N - 1>(a, str)
-				: I == 0
-					? std::make_pair(I, strequal_c(a[0], str))
-					: strequal_c(a[I], str)
-						? std::make_pair(I, true)
-						: find<N, I - 1>(a, str)
+			: strequal_c(a[I], str)
+				? std::make_pair(I, true)
+				: find<N, I - 1>(a, str)
 	;
 }
 
+//template <std::size_t I = 1>
+//constexpr std::pair<std::size_t, bool> find(const std::array<const char*, 2>& a, const char* str)
+//{
+//	return (I == 0
+//			? std::make_pair(I, strequal_c(a[0], str))
+//			: (strequal_c(a[I], str)
+//				? std::make_pair(I, true)
+//				: find<I - 1>(a, str)))
+//	;
+//}
+//
+//template <>
+//constexpr std::pair<std::size_t, bool> find<0>(const std::array<const char*, 2>& a, const char* str)
+//{
+//	return std::make_pair(0, strequal_c(a[0], str));
+//}
+
 struct s2
 {
-	using membersType = tuple_c<int, bool>;
-	static constexpr auto memberCount = std::tuple_size_v<typename membersType::type>;
+	using membersType = std::tuple<int, bool>;
+	static constexpr auto memberCount = std::tuple_size_v<membersType>;
 	static constexpr std::array<const char*, memberCount> memberNames_ = { { "range", "valid" } };
-	typename membersType::type members_;
+	membersType members_;
 
 	template <std::size_t I>
 	const auto& get() const
@@ -183,75 +209,62 @@ struct s2
 		return std::get<I>(members_);
 	}
 
-	//template <std::size_t I = memberCount>
-	//static constexpr std::pair<std::size_t, bool> find(const char* str)
-	//{
-	//	return memberCount < 1
-	//			? std::make_pair(std::size_t{}, false)
-	//			: I == 0
-	//				? std::make_pair(I, strequal_c(memberNames_[0], str))
-	//				: strequal_c(memberNames_[I], str)
-	//					? std::make_pair(I, true)
-	//					: find<I - 1>(str)
-	//	;
-	//}
-
-	template <std::size_t I>
-	static constexpr bool isMember(const char* str)
-	{
-		return strequal_c(memberNames_[I], str);
-	}
-
-	template <std::size_t I = memberCount - 1>
-	static constexpr std::size_t memberPosition(const char* str)
-	{
-		return memberCount < 1
-				? 255
-				: isMember<I>(str)
-					? I
-					: I == 0
-						? 255
-						: memberPosition<I - 1>(str)
-		;
-	}
-
 	//const auto& get(const char* member) const
 	//{
-	//	constexpr auto findResult = find<memberCount>(memberNames_, member);
+	//	constexpr std::pair<std::size_t, bool> findResult = find(memberNames_, member);
 	//	static_assert(findResult.second, "Member not found in struct");
 	//	return get<findResult.first>();
 	//}
 	//auto& get(const char* member)
 	//{
-	//	static_assert(find<memberCount>(memberNames_, member).second, "Member not found in struct");
-	//	return get<find<memberCount>(memberNames_, member).first>();
+	//	constexpr std::pair<std::size_t, bool> findResult = find(memberNames_, member);
+	//	static_assert(findResult.second, "Member not found in struct");
+	//	return get<findResult.first>();
 	//}
 
 	const auto& range() const { return get<0>(); }
 	auto& range() { return get<0>(); }
 	const auto& valid() const { return get<1>(); }
 	auto& valid() { return get<1>(); }
+
+private:
+	template <std::size_t I>
+	static constexpr std::size_t find_impl(const char* str)
+	{
+		return strequal_c(memberNames_[I], str) ? I : find_impl<I + 1>(str);
+	}
+	template <>
+	static constexpr std::size_t find_impl<memberCount>(const char* str)
+	{
+		return memberCount;
+	}
+
+public:
+	static constexpr std::size_t find(const char* str)
+	{
+		return find_impl<0>(str);
+	}
 };
 
-#define DECLARE_STRUCT(name, type1, member1, type2, member2)												\
-	struct name {																							\
-		using membersType = tuple_c<type1, type2>;															\
-		static constexpr auto memberCount = std::tuple_size_v<typename membersType::type>;					\
-		static constexpr std::array<const char*, memberCount> memberNames_ = { { #member1, #member2 } };	\
-		typename membersType::type members_;																\
-		template <std::size_t I>																			\
-		const auto& get() const { return std::get<I>(members_); }											\
-		template <std::size_t I>																			\
-		auto& get() { return std::get<I>(members_); }														\
-		const auto& ##member1() const { return get<0>(); }													\
-		auto& ##member1() { return get<0>(); }																\
-		const auto& ##member2() const { return get<1>(); }													\
-		auto& ##member2() { return get<1>(); }																\
-	};
-
-DECLARE_STRUCT(macroStruct,
-	int, range,
-	bool, valid)
+//#define DECLARE_STRUCT(name, type1, member1, type2, member2)												\
+//	struct name {																							\
+//		using membersType = tuple_c<type1, type2>;															\
+//		static constexpr auto memberCount = std::tuple_size_v<typename membersType::type>;					\
+//		static constexpr std::array<const char*, memberCount> memberNames_ = { { #member1, #member2 } };	\
+//		typename membersType::type members_;																\
+//		template <std::size_t I>																			\
+//		const auto& get() const { return std::get<I>(members_); }											\
+//		template <std::size_t I>																			\
+//		auto& get() { return std::get<I>(members_); }														\
+//		const auto& ##member1() const { return get<0>(); }													\
+//		auto& ##member1() { return get<0>(); }																\
+//		const auto& ##member2() const { return get<1>(); }													\
+//		auto& ##member2() { return get<1>(); }																\
+//	};
+//
+//DECLARE_STRUCT(macroStruct,
+//	int, range,
+//	bool, valid)
 
 class object_t
 {
@@ -420,9 +433,15 @@ constexpr int i = f(n);
 int main()
 {
 	{
-		static_assert(std::tuple_size_v<decltype(macroStruct::memberNames_)> == 2, "");
-		macroStruct m;
-		m.range() = 3;
+		BigUint<128> large(123456789123456789);
+		large %= 47;
+		BigUint<128> l2(123456789123);
+		l2 /= 345;
+	}
+	{
+		//static_assert(std::tuple_size_v<decltype(macroStruct::memberNames_)> == 2, "");
+		//macroStruct m;
+		//m.range() = 3;
 		static_assert(s2::memberNames_[0][0] == 'r', "");
 		static_assert(strlen_c(s2::memberNames_[0]) == 5, "");
 		static_assert(strequal_c(s2::memberNames_[0], "range"), "");
@@ -430,7 +449,15 @@ int main()
 		static_assert(strequal_c(s2::memberNames_[0], "ranger") == false, "");
 		//constexpr auto im = s2::isMember<1>("fasfa");
 		//constexpr auto vvv = s2::memberPosition("rangee");
-		constexpr auto findResult = find(s2::memberNames_, "range");
+		constexpr auto findResult = find(s2::memberNames_, "valid");
+		s2 ns2;
+		ns2.get<0>() = 33;
+		ns2.get<1>() = false;
+		//auto& r1 = ns2.get2<"range">();
+		constexpr auto i2 = s2::find("valid");
+		auto& r2 = ns2.get<i2>();
+		auto& r3 = ns2.range();
+		auto& r4 = ns2.valid();
 		constexpr std::array<const char*, 2> aa{{"range", "valid"}};
 		//constexpr auto vvv = bau(aa, "rangee");
 		//static_assert(vvv.second == false, "");
@@ -497,6 +524,6 @@ int main()
 	//ext::narrowest_type_t<float, char> aa;
 
 	constexpr auto x = ext::gcd((unsigned int)8, (unsigned int)0, (unsigned int)600, (unsigned int)200, (unsigned int)72);
-	constexpr auto y = ext::min((unsigned int)800, (unsigned int)900, (unsigned int)600, (unsigned int)200, (unsigned int)72);
+	//constexpr auto y = ext::min((unsigned int)800, (unsigned int)900, (unsigned int)600, (unsigned int)200, (unsigned int)72);
 	return 0;
 }

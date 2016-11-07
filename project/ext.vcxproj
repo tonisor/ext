@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\bigint.hpp" />
     <ClInclude Include="..\ext\cmath.hpp" />
+    <ClInclude Include="..\ext\serial.hpp" />
     <ClInclude Include="..\ext\type_traits.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
