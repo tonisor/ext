@@ -11,6 +11,7 @@
 #include "ext/type_traits.hpp"
 #include "ext/cmath.hpp"
 #include "ext/bigint.hpp"
+#include "ext/enum.hpp"
 
 template <typename T>
 T RandomInRange(const T& minValue, const T& maxValue)
@@ -430,8 +431,71 @@ constexpr int f(T& n) { return sizeof(T); }
 int n = 0;
 constexpr int i = f(n);
 
+struct Date
+{
+	int32_t year;
+	int8_t month;
+	int8_t day;
+};
+
+bool operator<(const Date& lhs, const Date& rhs)
+{
+	return std::tie(lhs.year, lhs.month, lhs.day) < std::tie(rhs.year, rhs.month, rhs.day);
+}
+
+class ZZZ
+{
+public:
+	constexpr ZZZ(std::array<int, 2> v) : ma(v) {}
+	std::array<int, 2> ma;
+};
+
+void testEnums()
+{
+	constexpr auto TState = ext::make_enum(4.5, 5.4, 3.4f);
+	//constexpr auto TExtension = ext::make_enum("jpg", "gif", "png");
+
+	auto f = 44;
+	switch (TState(f))
+	{
+	case TState(4.5):
+		std::cout << "first" << std::endl;
+		break;
+	case TState(5.4):
+		std::cout << "second" << std::endl;
+		break;
+	case TState(3.4f):
+		std::cout << "third" << std::endl;
+		break;
+	case TState.Unknown:
+		std::cout << "unknown" << std::endl;
+	}
+
+	std::copy(TState.cbegin(), TState.cend(), std::ostream_iterator<decltype(TState)::underlying_type>(std::cout, " "));
+
+	//const char* ext = "png";
+	//switch (TExtension(ext))
+	//{
+	//case TExtension("jpg"):
+	//	std::cout << "jpg" << std::endl;
+	//	break;
+	//case TExtension("gif"):
+	//	std::cout << "gif" << std::endl;
+	//	break;
+	//case TExtension("png"):
+	//	std::cout << "png" << std::endl;
+	//	break;
+	//case TExtension.Unknown:
+	//	std::cout << "unknown" << std::endl;
+	//}
+
+	//std::copy(TExtension.cbegin(), TExtension.cend(), std::ostream_iterator<decltype(TExtension)::underlying_type>(std::cout, " "));
+}
+
 int main()
 {
+	testEnums();
+	auto rex = Date{ 999, 9, 22 } < Date{ 999, 10, 11 };
 	{
 		BigUint<128> large(123456789123456789);
 		large %= 47;

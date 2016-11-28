@@ -83,6 +83,17 @@ namespace ext
 
 	template <typename... T>
 	using narrowest_type_t = Private::winner_type_t<std::tuple<T...>, narrowest_type<>>;
+
+	template <typename T = void>
+	struct widest_integral_type
+	{
+		template <typename TLeft, typename TRight>
+		struct condition : std::integral_constant<bool, std::is_integral<TLeft>::value ? (std::is_integral<TRight>::value ? (sizeof(TLeft) >= sizeof(TRight)) : true) : (std::is_integral<TRight>::value ? false : true)>
+		{};
+	};
+
+	template <typename... T>
+	using widest_integral_type_t = Private::winner_type_t<std::tuple<T...>, widest_integral_type<>>;
 }
 
 #endif // _TYPE_TRAITS_EXT_H_
