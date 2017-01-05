@@ -52,56 +52,28 @@ namespace ext
 
 		constexpr std::size_t operator()(T v) const
 		{
-			return GetPosition(v, N);
+			std::size_t i = N - 1;
+			while (i != Unknown && !equal(v, _storage[i]))
+				i--;
+			return i;
 		}
 
 	private:
-		template <typename U = T> constexpr
+		template <typename U = T> static constexpr
 			std::enable_if_t<!std::is_same<U, const char*>::value, std::size_t>
-			GetPosition(T v, std::size_t n) const
+			equal(U lhs, U rhs)
 		{
-			return n == 0 ? Unknown : v == _storage[n - 1] ? n - 1 : GetPosition(v, n - 1);
+			return lhs == rhs;
 		}
 
-		template <typename U = T> constexpr
+		template <typename U = T> static constexpr
 			std::enable_if_t<std::is_same<U, const char*>::value, std::size_t>
-			GetPosition(T v, std::size_t n) const
+			equal(U lhs, U rhs)
 		{
-			return n == 0 ? Unknown : strequal_c(v, _storage[n - 1]) ? n - 1 : GetPosition(v, n - 1);
+			return strequal_c(lhs, rhs);
 		}
-
-		//template <>
-		//constexpr std::size_t GetPosition<0, T>(T v) const
-		//{
-		//	return Unknown;
-		//}
-
-		//template <> constexpr
-		//	std::enable_if_t<std::is_same<T, const char*>::value, std::size_t>
-		//	operator()<0>(T v) const
-		//{
-		//	return Unknown;
-		//}
 
 		storage_type _storage;
-
-		//constexpr std::size_t operator()(T v) const
-		//{
-		//	for (std::size_t i = 0; i < N; ++i)
-		//	{
-		//		if constexpr(std::is_fundamental_v<T>)
-		//		{
-		//			if (v == operator[](i))
-		//				return i;
-		//		}
-		//		else if constexpr(std::is_same_v<T, const char*>)
-		//		{
-		//			if (strequal_c(v, operator[](i)))
-		//				return i;
-		//		}
-		//	}
-		//	return -1;
-		//}
 	};
 
 	namespace details
@@ -119,7 +91,7 @@ namespace ext
 
 	template <typename D = void, typename... Types>
 	constexpr details::return_type<D, Types...> make_array(Types&&... t) {
-		return {std::forward<Types>(t)...};
+		return {{std::forward<Types>(t)...}};
 	}
 
 	template <typename D = void, typename... Types>

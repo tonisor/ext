@@ -429,7 +429,7 @@ std::conditional_t<Type == Obj::eSave, char*, size_t> Obj::Generic(char* buffer)
 template <typename T>
 constexpr int f(T& n) { return sizeof(T); }
 int n = 0;
-constexpr int i = f(n);
+//constexpr int i = f(n);
 
 struct Date
 {
@@ -453,7 +453,7 @@ public:
 void testEnums()
 {
 	constexpr auto TState = ext::make_enum(4.5, 5.4, 3.4f);
-	//constexpr auto TExtension = ext::make_enum("jpg", "gif", "png");
+	constexpr auto TExtension = ext::make_enum("jpg", "gif", "png");
 
 	auto f = 44;
 	switch (TState(f))
@@ -473,29 +473,47 @@ void testEnums()
 
 	std::copy(TState.cbegin(), TState.cend(), std::ostream_iterator<decltype(TState)::underlying_type>(std::cout, " "));
 
-	//const char* ext = "png";
-	//switch (TExtension(ext))
-	//{
-	//case TExtension("jpg"):
-	//	std::cout << "jpg" << std::endl;
-	//	break;
-	//case TExtension("gif"):
-	//	std::cout << "gif" << std::endl;
-	//	break;
-	//case TExtension("png"):
-	//	std::cout << "png" << std::endl;
-	//	break;
-	//case TExtension.Unknown:
-	//	std::cout << "unknown" << std::endl;
-	//}
+	const char* ext = "png";
+	switch (TExtension(ext))
+	{
+	case TExtension("jpg"):
+		std::cout << "jpg" << std::endl;
+		break;
+	case TExtension("gif"):
+		std::cout << "gif" << std::endl;
+		break;
+	case TExtension("png"):
+		std::cout << "png" << std::endl;
+		break;
+	case TExtension.Unknown:
+		std::cout << "unknown" << std::endl;
+	}
 
-	//std::copy(TExtension.cbegin(), TExtension.cend(), std::ostream_iterator<decltype(TExtension)::underlying_type>(std::cout, " "));
+	std::copy(TExtension.cbegin(), TExtension.cend(), std::ostream_iterator<decltype(TExtension)::underlying_type>(std::cout, " "));
 }
+
+//template <typename T, std::size_t N>
+//constexpr std::array<T, N> sort(std::array<T, N> ain)
+//{
+//	auto aout = ain;
+//	for (std::size_t i = 0; i < N - 1; i++)
+//	{
+//		for (std::size_t j = i + 1; j < N; j++)
+//		{
+//			if (aout[j] < aout[i])
+//				std::swap(aout[i], aout[j]);
+//		}
+//	}
+//	return aout;
+//}
 
 int main()
 {
+	//constexpr std::array<int, 3> ain{ { 3, 2, 1 }};
+	//constexpr auto aout = sort(ain);
+
 	testEnums();
-	auto rex = Date{ 999, 9, 22 } < Date{ 999, 10, 11 };
+	//auto rex = Date{ 999, 9, 22 } < Date{ 999, 10, 11 };
 	{
 		BigUint<128> large(123456789123456789);
 		large %= 47;
@@ -513,16 +531,16 @@ int main()
 		static_assert(strequal_c(s2::memberNames_[0], "ranger") == false, "");
 		//constexpr auto im = s2::isMember<1>("fasfa");
 		//constexpr auto vvv = s2::memberPosition("rangee");
-		constexpr auto findResult = find(s2::memberNames_, "valid");
+		//constexpr auto findResult = find(s2::memberNames_, "valid");
 		s2 ns2;
 		ns2.get<0>() = 33;
 		ns2.get<1>() = false;
 		//auto& r1 = ns2.get2<"range">();
-		constexpr auto i2 = s2::find("valid");
-		auto& r2 = ns2.get<i2>();
-		auto& r3 = ns2.range();
-		auto& r4 = ns2.valid();
-		constexpr std::array<const char*, 2> aa{{"range", "valid"}};
+		//constexpr auto i2 = s2::find("valid");
+		//auto& r2 = ns2.get<i2>();
+		//auto& r3 = ns2.range();
+		//auto& r4 = ns2.valid();
+		//constexpr std::array<const char*, 2> aa{{"range", "valid"}};
 		//constexpr auto vvv = bau(aa, "rangee");
 		//static_assert(vvv.second == false, "");
 		{
@@ -560,7 +578,7 @@ int main()
 	std::tie(std::ignore, ac) = af();
 
 	int ai = sin(6);
-	generic_save_t<kAddSaveSize> cvalue = 0;
+	//generic_save_t<kAddSaveSize> cvalue = 0;
 	constexpr auto resai = gensave<kAddSaveSize>(ai);
 	static_assert(resai == 4, "");
 
@@ -583,11 +601,11 @@ int main()
 	//	std::back_inserter(words));
 
 	test1();
-	auto a = ext::gcd();
+	//auto a = ext::gcd();
 
 	//ext::narrowest_type_t<float, char> aa;
 
-	constexpr auto x = ext::gcd((unsigned int)8, (unsigned int)0, (unsigned int)600, (unsigned int)200, (unsigned int)72);
+	//constexpr auto x = ext::gcd((unsigned int)8, (unsigned int)0, (unsigned int)600, (unsigned int)200, (unsigned int)72);
 	//constexpr auto y = ext::min((unsigned int)800, (unsigned int)900, (unsigned int)600, (unsigned int)200, (unsigned int)72);
 	return 0;
 }
